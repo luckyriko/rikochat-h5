@@ -19,8 +19,8 @@
     <!-- 内容 -->
     <div class="relative z-10">
       <!-- 大标题 -->
-      <h1 class="flex flex-row justify-center text-6xl font-bold text-white mb-5 animate-bounce">
-        二次元
+      <h1 class="flex flex-row justify-center text-4xl font-bold text-white mb-5 animate-bounce">
+        RikoChat
       </h1>
       <h1 class="flex flex-row justify-center text-6xl font-bold text-white mb-5 animate-bounce">
         角色对话

@@ -11,33 +11,30 @@
     <wd-form ref="form" :model="model" class="custom-txt">
       <wd-cell-group border>
         <wd-input
-          label="用户名"
+          label="动漫名/片名"
           label-width="100px"
           prop="value1"
           clearable
           v-model="model.value1"
-          placeholder="请输入用户名"
-          :rules="[{ required: true, message: '请填写用户名' }]"
+          placeholder="请填写出自哪里"
+          :rules="[{ required: true, message: '必填' }]"
         />
         <wd-input
-          label="密码"
+          label="角色名称"
           label-width="100px"
           prop="value2"
-          show-password
           clearable
           v-model="model.value2"
-          placeholder="请输入密码"
-          :rules="[{ required: true, message: '请填写密码' }]"
+          placeholder="请填写AI要扮演的角色"
+          :rules="[{ required: true, message: '必填' }]"
         />
         <wd-input
-          label="性格"
+          label="人物性格"
           label-width="100px"
-          prop="value2"
-          show-password
+          prop="value3"
           clearable
           v-model="model.value2"
-          placeholder="请输入密码"
-          :rules="[{ required: true, message: '请填写密码' }]"
+          placeholder="可不填"
         />
       </wd-cell-group>
       <view class="footer flex flex-row">
@@ -55,11 +52,22 @@ import { ref, reactive } from 'vue'
 const show = ref(false)
 
 const goChat = (item) => {
+  if (!item.title) {
+    return
+  }
   if (item.flag) {
     show.value = true
   } else {
+    if (!item.name) {
+      uni.showToast({
+        title: '暂不支持',
+        icon: 'none', // 不显示图标
+        duration: 1500,
+      })
+      return
+    }
     uni.navigateTo({
-      url: '/pages/chat/index', // 目标页面路径
+      url: '/pages/chat/index?name=' + item.name, // 目标页面路径
     })
   }
 }
@@ -69,10 +77,10 @@ const handleClose = () => {
 }
 // 定义数组，包含标题和图片
 const items = [
-  { title: '亚里亚', image: '/static/images/yaliya.jpg' },
-  { title: '峰·理子·罗宾', image: '/static/images/riko.jpg' },
-  { title: '自定义', image: '/static/images/custom.jpeg', flag: 1 },
-  { title: '', image: '' },
+  { title: '亚里亚', name: 'yaliya', image: '/static/images/yaliya.jpg' },
+  { title: '峰·理子·罗宾', name: 'riko', image: '/static/images/riko.jpg' },
+  { title: '自定义', name: '', image: '/static/images/custom.jpeg', flag: 1 },
+  { title: '聊天', name: 'chat', image: '' },
   { title: '', image: '' },
   { title: '', image: '' },
 ]
@@ -82,6 +90,7 @@ const items = [
 const model = reactive({
   value1: '',
   value2: '',
+  value3: '',
 })
 
 const form = ref()

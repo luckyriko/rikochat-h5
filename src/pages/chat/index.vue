@@ -16,7 +16,13 @@
     </view>
 
     <!-- 聊天区域 -->
-    <scroll-view class="chat-messages" scroll-y="true" :scroll-top="scrollTop">
+    <scroll-view
+      class="chat-messages"
+      :scroll-y="true"
+      :scroll-top="scrollTop"
+      :style="{ height: scrollViewHeight + 'px' }"
+      :show-scrollbar="true"
+    >
       <!-- 樱花背景 -->
       <view
         v-for="(style, index) in sakuraStyles"
@@ -67,7 +73,66 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
+
+import throttle from 'lodash/throttle'
+
+import { ref, onMounted, nextTick } from 'vue'
+import http from '@/utils/rikohttp'
+
+const apiName = ref('')
+
+onLoad((options) => {
+  console.log('接收到的参数:', options.name)
+  apiName.value = options.name
+  // 输出：{ id: '123', name: 'uniapp' }
+  fetchData()
+})
+
+const fetchData = async (msg) => {
+  uni.showLoading({
+    title: '加载中...', // 提示内容
+    mask: true, // 是否显示透明蒙层（防止触摸穿透）
+  })
+
+  try {
+    const result = await http({
+      url: '/deepseek/' + apiName.value,
+      method: 'POST',
+      data: {
+        content: msg,
+      },
+    })
+
+    messages.value.push({
+      sender: 'other',
+      nickname: 'TA',
+      content: result.reply,
+      time: new Date().toLocaleTimeString().slice(0, 5), // 获取当前时间（HH:MM）
+    })
+    console.log(result.reply)
+  } catch (error) {
+    uni.showToast({
+      title: error.errMsg || '请求超时',
+      icon: 'none', // 不显示图标
+      duration: 1500,
+    })
+    messages.value.push({
+      sender: 'other',
+      nickname: 'TA',
+      content: '请求超时/失败，请重试',
+      time: new Date().toLocaleTimeString().slice(0, 5), // 获取当前时间（HH:MM）
+    })
+    console.error('请求失败:', error)
+  } finally {
+    // 滚动到底部
+    chatScrollTop()
+    uni.hideLoading()
+  }
+}
+
+// 调用请求函数
+// fetchData()
 
 // 定义樱花的样式数据
 const sakuraStyles = ref([])
@@ -99,23 +164,29 @@ const chatTargetName = ref('聊天对象')
 
 // 输入框内容
 const inputMessage = ref('')
+const scrollViewHeight = ref(0) // scroll-view 的高度
+const initScrollViewHeight = () => {
+  const systemInfo = uni.getSystemInfoSync()
+  scrollViewHeight.value = systemInfo.windowHeight - 100 // 根据实际情况调整
+}
+
+// 初始化
+initScrollViewHeight()
 
 // 聊天记录
 const messages = ref([
-  {
-    sender: 'other',
-    nickname: '对方昵称',
-    name: '对方姓名',
-    content: '你好！这是一条测试消息。',
-    time: '10:00',
-  },
-  {
-    sender: 'self',
-    nickname: '自己昵称',
-    name: '自己姓名',
-    content: '你好！这是我的回复。',
-    time: '10:01',
-  },
+  // {
+  //   sender: 'other',
+  //   nickname: 'TA',
+  //   content: '你好！这是一条测试消息。',
+  //   time: '10:00',
+  // },
+  // {
+  //   sender: 'self',
+  //   nickname: '我',
+  //   content: '你好！这是我的回复。',
+  //   time: '10:01',
+  // },
 ])
 
 // 滚动位置
@@ -125,11 +196,11 @@ const scrollTop = ref(0)
 const sendMessage = () => {
   if (inputMessage.value.trim() === '') return
 
+  fetchData(inputMessage.value)
   // 添加新消息
   messages.value.push({
     sender: 'self',
-    nickname: '自己昵称',
-    name: '自己姓名',
+    nickname: '我',
     content: inputMessage.value,
     time: new Date().toLocaleTimeString().slice(0, 5), // 获取当前时间（HH:MM）
   })
@@ -138,10 +209,26 @@ const sendMessage = () => {
   inputMessage.value = ''
 
   // 滚动到底部
-  setTimeout(() => {
-    scrollTop.value = 99999 // 设置一个较大的值，确保滚动到底部
-  }, 50)
+  chatScrollTop()
 }
+
+const chatScrollTop = throttle(async () => {
+  await nextTick()
+  console.log(66666666)
+  scrollTop.value = 99999
+  // const query = uni.createSelectorQuery()
+  // query.select('.chat-messages').boundingClientRect()
+  // query.select('.message-item').boundingClientRect()
+  // query.exec((res) => {
+  //   const scrollViewHeight = res[0].height
+  //   const scrollContentHeight = res[1].height
+  //   if (scrollContentHeight > scrollViewHeight) {
+  //     const scrollTop = scrollContentHeight - scrollViewHeight
+  //     scrollTop.value = scrollTop
+  //     console.log('---scrollTop----', scrollTop)
+  //   }
+  // })
+}, 1000)
 </script>
 
 <style scoped>
@@ -178,6 +265,7 @@ const sendMessage = () => {
 /* 聊天区域 */
 .chat-messages {
   position: relative;
+  box-sizing: border-box;
   flex: 1;
   padding: 16px;
   overflow-y: auto;
@@ -233,7 +321,7 @@ const sendMessage = () => {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  margin-left: 25rpx; /* 增加左边距 */
+  margin-left: 15rpx; /* 增加左边距 */
 }
 
 .message-content-other {
@@ -249,7 +337,7 @@ const sendMessage = () => {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  margin-right: 65rpx; /* 增加右边距 */
+  margin-right: 15rpx; /* 增加右边距 */
 }
 
 .message-content-self {
