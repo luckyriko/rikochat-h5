@@ -1,8 +1,8 @@
 {
-  "name": "my-project",
+  "name": "rikochat",
   "type": "commonjs",
   "version": "2.5.5",
-  "description": "unibest - 最好的 uniapp 开发模板",
+  "description": "rikochat - a deepseek chat app",
   "author": {
     "name": "feige996",
     "zhName": "菲鸽",

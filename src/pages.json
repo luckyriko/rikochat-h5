@@ -1,7 +1,7 @@
 {
   "globalStyle": {
     "navigationStyle": "default",
-    "navigationBarTitleText": "unibest",
+    "navigationBarTitleText": "rikochat",
     "navigationBarBackgroundColor": "#f8f8f8",
     "navigationBarTextStyle": "black",
     "backgroundColor": "#FFFFFF"
@@ -39,7 +39,7 @@
   },
   "pages": [
     {
-      "path": "pages/index/index",
+      "path": "pages/hello/index",
       "type": "home",
       "style": {
         "navigationStyle": "custom",
@@ -47,10 +47,30 @@
       }
     },
     {
+      "path": "pages/chat/index",
+      "type": "home",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "chat"
+      }
+    },
+    {
       "path": "pages/about/about",
       "type": "page",
       "style": {
         "navigationBarTitleText": "关于"
+      }
+    },
+    {
+      "path": "pages/first/index",
+      "type": "page"
+    },
+    {
+      "path": "pages/index/index",
+      "type": "page",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "首页"
       }
     }
   ],
