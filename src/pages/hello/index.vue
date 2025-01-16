@@ -9,7 +9,7 @@
 </route>
 
 <template>
-  <div class="flex flex-col items-center justify-center h-screen p-5 overflow-hidden relative">
+  <div class="bg flex flex-col items-center h-screen p-5 overflow-hidden relative">
     <!-- 黑夜背景 -->
     <div class="absolute inset-0 bg-black overflow-hidden">
       <!-- 星光效果 -->
@@ -92,6 +92,11 @@ body {
 /* 黑夜背景 */
 .bg-black {
   background: black;
+}
+
+.bg {
+  box-sizing: border-box;
+  padding-top: 200rpx;
 }
 /* 星光效果 */
 .star {
