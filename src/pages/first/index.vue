@@ -13,33 +13,33 @@
         <wd-input
           label="动漫名/片名"
           label-width="100px"
-          prop="value1"
+          prop="from"
           clearable
-          v-model="model.value1"
+          v-model="model.from"
           placeholder="请填写出自哪里"
           :rules="[{ required: true, message: '必填' }]"
         />
         <wd-input
           label="角色名称"
           label-width="100px"
-          prop="value2"
+          prop="name"
           clearable
-          v-model="model.value2"
+          v-model="model.name"
           placeholder="请填写AI要扮演的角色"
           :rules="[{ required: true, message: '必填' }]"
         />
         <wd-input
           label="人物性格"
           label-width="100px"
-          prop="value3"
+          prop="detail"
           clearable
-          v-model="model.value2"
+          v-model="model.detail"
           placeholder="可不填"
         />
       </wd-cell-group>
       <view class="footer flex flex-row">
         <wd-button type="primary" size="large" @click="handleSubmit" block>提交</wd-button>
-        <wd-button type="error" size="large" @click="handleSubmit" block>取消</wd-button>
+        <wd-button type="error" size="large" @click="handleClose" block>取消</wd-button>
       </view>
     </wd-form>
   </wd-popup>
@@ -58,7 +58,7 @@ const goChat = (item) => {
   if (item.flag) {
     show.value = true
   } else {
-    if (!item.name) {
+    if (!item.api) {
       uni.showToast({
         title: '暂不支持',
         icon: 'none', // 不显示图标
@@ -67,7 +67,7 @@ const goChat = (item) => {
       return
     }
     uni.navigateTo({
-      url: '/pages/chat/index?name=' + item.name, // 目标页面路径
+      url: '/pages/chat/index?api=' + item.api,
     })
   }
 }
@@ -77,20 +77,18 @@ const handleClose = () => {
 }
 // 定义数组，包含标题和图片
 const items = [
-  { title: '亚里亚', name: 'yaliya', image: '/static/images/yaliya.jpg' },
-  { title: '峰·理子·罗宾', name: 'riko', image: '/static/images/riko.jpg' },
-  { title: '自定义', name: '', image: '/static/images/custom.jpeg', flag: 1 },
-  { title: '聊天', name: 'chat', image: '' },
-  { title: '', image: '' },
-  { title: '', image: '' },
+  { title: '亚里亚', api: 'yaliya', image: '/static/images/yaliya.jpg' },
+  { title: '峰·理子·罗宾', api: 'riko', image: '/static/images/riko.jpg' },
+  { title: '自定义', api: 'custom', image: '/static/images/custom.jpeg', flag: 1 },
+  { title: '普通聊天', api: 'chat', image: '/static/images/chat.jpg' },
+  { title: '一句话', api: 'animationSlogan', image: '/static/images/hello.webp' },
+  { title: '中英翻译', api: 'cnEnTranslate', image: '/static/images/tran.jpeg' },
 ]
 
-// const { success } = useToast()
-
 const model = reactive({
-  value1: '',
-  value2: '',
-  value3: '',
+  from: '',
+  name: '',
+  detail: '',
 })
 
 const form = ref()
@@ -100,7 +98,11 @@ function handleSubmit() {
     .validate()
     .then(({ valid, errors }) => {
       if (valid) {
-        console.log(111)
+        uni.navigateTo({
+          url: `/pages/chat/index?api=custom&name=${model.name}&from=${model.from}&detail=${model.detail}`,
+        })
+
+        handleClose()
       }
     })
     .catch((error) => {

@@ -1,23 +1,14 @@
 {
   "name": "rikochat",
   "type": "commonjs",
-  "version": "2.5.5",
+  "version": "1.0.0",
   "description": "rikochat - a deepseek chat app",
   "author": {
-    "name": "feige996",
-    "zhName": "菲鸽",
-    "email": "1020103647@qq.com",
-    "github": "https://github.com/feige996",
-    "gitee": "https://gitee.com/feige996"
+    "name": "luckyriko",
+    "zhName": "luckyriko",
+    "email": "luckyriko@qq.com"
   },
   "license": "MIT",
-  "repository": "https://github.com/feige996/unibest",
-  "repository-gitee": "https://gitee.com/feige996/unibest",
-  "repository-deprecated": "https://github.com/codercup/unibest",
-  "bugs": {
-    "url": "https://github.com/feige996/unibest/issues"
-  },
-  "homepage": "https://feige996.github.io/unibest/",
   "engines": {
     "node": ">=18",
     "pnpm": ">=7.30"

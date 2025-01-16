@@ -19,9 +19,10 @@
     <scroll-view
       class="chat-messages"
       :scroll-y="true"
-      :scroll-top="scrollTop"
-      :style="{ height: scrollViewHeight + 'px' }"
-      :show-scrollbar="true"
+      :show-scrollbar="false"
+      scroll-with-animation
+      :scroll-into-view="scrollItem"
+      @scrolltoupper="topMessageShow"
     >
       <!-- 樱花背景 -->
       <view
@@ -36,11 +37,11 @@
         :key="index"
         class="message-item"
         :class="message.sender"
+        :id="`item-${index}`"
       >
         <!-- 对方消息 -->
         <view v-if="message.sender === 'other'" class="message-other">
           <text class="message-nickname">{{ message.nickname }}</text>
-          <!-- <text class="message-name">({{ message.name }})</text> -->
           <view class="message-content-other">
             <text>{{ message.content }}</text>
           </view>
@@ -50,7 +51,6 @@
         <!-- 自己消息 -->
         <view v-else class="message-self">
           <text class="message-nickname">{{ message.nickname }}</text>
-          <!-- <text class="message-name">({{ message.name }})</text> -->
           <view class="message-content-self">
             <text>{{ message.content }}</text>
           </view>
@@ -67,56 +67,72 @@
         placeholder="请输入消息"
         @confirm="sendMessage"
       />
-      <button class="send-button" @click="sendMessage">发送</button>
+      <wd-button @click="sendMessage" class="send-button" size="small">发送</wd-button>
     </view>
   </view>
 </template>
 
 <script setup>
 import { onLoad } from '@dcloudio/uni-app'
-
 import throttle from 'lodash/throttle'
-
 import { ref, onMounted, nextTick } from 'vue'
 import http from '@/utils/rikohttp'
 
 const apiName = ref('')
-
-onLoad((options) => {
-  console.log('接收到的参数:', options.name)
-  apiName.value = options.name
-  // 输出：{ id: '123', name: 'uniapp' }
-  fetchData()
+const customData = reactive({
+  from: '',
+  name: '',
+  detail: '',
 })
 
-const fetchData = async (msg) => {
+onLoad((options) => {
+  // console.log('接收到的参数:', options)
+  apiName.value = options.api
+  customData.from = options.from
+  customData.name = options.name
+  customData.detail = options.detail
+
+  fetchData(options)
+})
+
+// 触顶加载更多
+const topMessageShow = () => {
+  console.log('触顶加载更多！')
+}
+
+const fetchData = async (params) => {
   uni.showLoading({
     title: '加载中...', // 提示内容
     mask: true, // 是否显示透明蒙层（防止触摸穿透）
   })
 
   try {
+    const data = { content: params.content || '' }
+    if (apiName.value === 'custom') {
+      data.from = customData.from
+      data.name = customData.name
+      data.detail = customData.detail
+    }
     const result = await http({
       url: '/deepseek/' + apiName.value,
       method: 'POST',
-      data: {
-        content: msg,
-      },
+      data,
     })
-
+    // 成功消息
     messages.value.push({
       sender: 'other',
       nickname: 'TA',
       content: result.reply,
       time: new Date().toLocaleTimeString().slice(0, 5), // 获取当前时间（HH:MM）
     })
-    console.log(result.reply)
   } catch (error) {
+    // 失败弹窗提示
     uni.showToast({
       title: error.errMsg || '请求超时',
       icon: 'none', // 不显示图标
       duration: 1500,
     })
+    // 失败消息
     messages.value.push({
       sender: 'other',
       nickname: 'TA',
@@ -125,14 +141,9 @@ const fetchData = async (msg) => {
     })
     console.error('请求失败:', error)
   } finally {
-    // 滚动到底部
-    chatScrollTop()
     uni.hideLoading()
   }
 }
-
-// 调用请求函数
-// fetchData()
 
 // 定义樱花的样式数据
 const sakuraStyles = ref([])
@@ -173,6 +184,7 @@ const initScrollViewHeight = () => {
 // 初始化
 initScrollViewHeight()
 
+const scrollItem = ref('')
 // 聊天记录
 const messages = ref([
   // {
@@ -196,7 +208,7 @@ const scrollTop = ref(0)
 const sendMessage = () => {
   if (inputMessage.value.trim() === '') return
 
-  fetchData(inputMessage.value)
+  fetchData({ content: inputMessage.value })
   // 添加新消息
   messages.value.push({
     sender: 'self',
@@ -207,28 +219,24 @@ const sendMessage = () => {
 
   // 清空输入框
   inputMessage.value = ''
-
-  // 滚动到底部
-  chatScrollTop()
 }
 
-const chatScrollTop = throttle(async () => {
-  await nextTick()
-  console.log(66666666)
-  scrollTop.value = 99999
-  // const query = uni.createSelectorQuery()
-  // query.select('.chat-messages').boundingClientRect()
-  // query.select('.message-item').boundingClientRect()
-  // query.exec((res) => {
-  //   const scrollViewHeight = res[0].height
-  //   const scrollContentHeight = res[1].height
-  //   if (scrollContentHeight > scrollViewHeight) {
-  //     const scrollTop = scrollContentHeight - scrollViewHeight
-  //     scrollTop.value = scrollTop
-  //     console.log('---scrollTop----', scrollTop)
-  //   }
-  // })
-}, 1000)
+// 动态更新item的值
+watch(
+  messages,
+  (newval, oldval) => {
+    // console.log('----newval----', newval.length)
+    // 重新赋值item,延迟到dom更新之后进行，否则没效果
+    nextTick(() => {
+      scrollItem.value = 'item-' + (newval.length - 1)
+      // console.log('----scrollItem----', scrollItem.value)
+    })
+  },
+  {
+    deep: true, // 深度监视
+    immediate: true, // 初始化立即执行
+  },
+)
 </script>
 
 <style scoped>
@@ -246,7 +254,7 @@ const chatScrollTop = throttle(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  height: 6vh;
   background-color: #fff;
   border-bottom: 1px solid #e0e0e0;
 }
@@ -266,8 +274,8 @@ const chatScrollTop = throttle(async () => {
 .chat-messages {
   position: relative;
   box-sizing: border-box;
-  flex: 1;
-  padding: 16px;
+  height: 85vh;
+  padding: 10rpx 16rpx;
   overflow-y: auto;
 }
 
@@ -355,12 +363,6 @@ const chatScrollTop = throttle(async () => {
   font-weight: bold;
   color: #333;
 }
-
-.message-name {
-  margin-left: 4px;
-  font-size: 12px;
-  color: #666;
-}
 /* 消息时间 */
 .message-time {
   margin-top: 4px;
@@ -370,8 +372,12 @@ const chatScrollTop = throttle(async () => {
 /* 底部输入框 */
 .chat-input-container {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  padding: 8px 16px;
+  justify-content: space-between;
+  height: 9vh;
+
+  padding: 0px 16px;
   background-color: #fff;
   border-top: 1px solid #e0e0e0;
 }
@@ -386,10 +392,6 @@ const chatScrollTop = throttle(async () => {
 }
 
 .send-button {
-  padding: 8px 16px;
-  font-size: 14px;
-  color: #fff;
-  background-color: #007aff; /* 蓝色按钮 */
-  border-radius: 8px;
+  width: 120rpx;
 }
 </style>
